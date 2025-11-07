@@ -1,0 +1,1442 @@
+ <!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>شاشة الأذون - نظام السوبر ماركت</title>
+    <script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
+    <script src="js/googleSheets.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0fa36b 0%, #1e7e5c 100%);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(31, 158, 108, 0.1) 25%, transparent 25%),
+                linear-gradient(-45deg, rgba(31, 158, 108, 0.1) 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, rgba(31, 158, 108, 0.1) 75%),
+                linear-gradient(-45deg, transparent 75%, rgba(31, 158, 108, 0.1) 75%);
+            background-size: 100px 100px;
+            background-position: 0 0, 0 50px, 50px -50px, -50px 0px;
+            z-index: 0;
+            animation: backgroundShift 8s ease-in-out infinite alternate;
+        }
+
+        @keyframes backgroundShift {
+            0% { transform: scale(1) rotate(0deg); }
+            100% { transform: scale(1.1) rotate(1deg); }
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(25px);
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 
+                0 10px 30px rgba(0, 0, 0, 0.2),
+                0 6px 0 rgba(0, 0, 0, 0.15),
+                inset 0 -2px 0 rgba(255, 255, 255, 0.2);
+            border-radius: 0 0 25px 25px;
+            margin: 0 10px;
+        }
+
+        .menu-btn {
+            background: linear-gradient(135deg, #667ee0, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 700;
+            backdrop-filter: blur(10px);
+            transition: all 0.4s ease;
+            box-shadow: 
+                0 8px 20px rgba(0, 0, 0, 0.3),
+                0 4px 0 rgba(0, 0, 0, 0.2),
+                inset 0 -2px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .menu-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 
+                0 12px 25px rgba(0, 0, 0, 0.4),
+                0 6px 0 rgba(0, 0, 0, 0.25),
+                inset 0 -2px 0 rgba(255, 255, 255, 0.4);
+        }
+
+        .home-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 18px;
+            backdrop-filter: blur(15px);
+            transition: all 0.3s ease;
+            box-shadow: 
+                0 6px 15px rgba(0, 0, 0, 0.2),
+                0 3px 0 rgba(0, 0, 0, 0.15);
+        }
+
+        .home-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px) rotate(5deg);
+            box-shadow: 
+                0 8px 20px rgba(0, 0, 0, 0.3),
+                0 4px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .screen-title {
+            color: white;
+            font-size: 26px;
+            font-weight: 800;
+            text-shadow: 
+                0 2px 4px rgba(0, 0, 0, 0.5),
+                0 0 20px rgba(255, 255, 255, 0.3);
+            background: linear-gradient(45deg, #fff, #e0f7fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: titleGlow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes titleGlow {
+            0% { text-shadow: 0 2px 4px rgba(0,0,0,0.5), 0 0 20px rgba(255,255,255,0.3); }
+            100% { text-shadow: 0 2px 8px rgba(0,0,0,0.6), 0 0 30px rgba(255,255,255,0.5); }
+        }
+
+        .permission-info {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            padding: 25px;
+            margin: 30px 20px 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 
+                0 8px 25px rgba(0, 0, 0, 0.2),
+                0 4px 0 rgba(0, 0, 0, 0.15);
+            position: relative;
+            z-index: 1;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .info-item {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .info-item:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .info-label {
+            color: #e0f7fa;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .info-value {
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .items-scroll-container {
+            margin: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .items-scroll-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .items-scroll-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .items-scroll-container::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #667ee0, #764ba2);
+            border-radius: 10px;
+        }
+
+        .items-scroll-container::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #5a6fd8, #6a4190);
+        }
+
+        .items-list {
+            padding: 10px;
+        }
+
+        .item-row {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: slideIn 0.3s ease;
+            transition: all 0.3s ease;
+        }
+
+        .item-row:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .item-info {
+            flex: 1;
+        }
+
+        .item-name {
+            color: white;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .item-barcode {
+            color: #e0f7fa;
+            font-size: 14px;
+        }
+
+        .item-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .quantity-input {
+            width: 80px;
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            text-align: center;
+            font-size: 16px;
+            font-weight: 700;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .quantity-input:focus {
+            outline: none;
+            transform: scale(1.05);
+            box-shadow: 
+                inset 0 2px 5px rgba(0,0,0,0.1),
+                0 0 10px rgba(255,255,255,0.5);
+        }
+
+        .delete-btn {
+            background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+            color: white;
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 
+                0 4px 10px rgba(255, 107, 107, 0.4),
+                0 2px 0 rgba(255, 107, 107, 0.3);
+        }
+
+        .delete-btn:hover {
+            transform: scale(1.1) rotate(10deg);
+            box-shadow: 
+                0 6px 15px rgba(255, 107, 107, 0.6),
+                0 3px 0 rgba(255, 107, 107, 0.4);
+        }
+
+        .add-item-main {
+            position: fixed;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 180px;
+            height: 180px;
+            background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 800;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            box-shadow: 
+                0 20px 40px rgba(255, 107, 107, 0.4),
+                0 10px 0 rgba(255, 107, 107, 0.3),
+                inset 0 -4px 0 rgba(255, 255, 255, 0.3),
+                0 0 30px rgba(255, 107, 107, 0.6);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: pulseGlow 2s ease-in-out infinite alternate;
+            z-index: 10;
+            flex-direction: column;
+            line-height: 1.4;
+        }
+
+        @keyframes pulseGlow {
+            0% { 
+                transform: translate(-50%, -50%) scale(1);
+                box-shadow: 
+                    0 20px 40px rgba(255, 107, 107, 0.4),
+                    0 10px 0 rgba(255, 107, 107, 0.3),
+                    inset 0 -4px 0 rgba(255, 255, 255, 0.3),
+                    0 0 30px rgba(255, 107, 107, 0.6);
+            }
+            100% { 
+                transform: translate(-50%, -50%) scale(1.1);
+                box-shadow: 
+                    0 25px 50px rgba(255, 107, 107, 0.6),
+                    0 12px 0 rgba(255, 107, 107, 0.4),
+                    inset 0 -4px 0 rgba(255, 255, 255, 0.4),
+                    0 0 50px rgba(255, 107, 107, 0.8);
+            }
+        }
+
+        .add-item-main:hover {
+            animation: none;
+            transform: translate(-50%, -50%) scale(1.15) rotate(5deg);
+            box-shadow: 
+                0 30px 60px rgba(255, 107, 107, 0.8),
+                0 15px 0 rgba(255, 107, 107, 0.5),
+                inset 0 -4px 0 rgba(255, 255, 255, 0.4),
+                0 0 70px rgba(255, 107, 107, 1);
+        }
+
+        .bottom-actions {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            gap: 20px;
+            align-items: center;
+            z-index: 10;
+            width: 90%;
+            max-width: 500px;
+            justify-content: center;
+        }
+
+        .add-item-small {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            box-shadow: 
+                0 10px 25px rgba(78, 205, 196, 0.4),
+                0 5px 0 rgba(78, 205, 196, 0.3),
+                inset 0 -2px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .add-item-small:hover {
+            transform: translateY(-3px) scale(1.1);
+            box-shadow: 
+                0 15px 30px rgba(78, 205, 196, 0.6),
+                0 7px 0 rgba(78, 205, 196, 0.4),
+                inset 0 -2px 0 rgba(255, 255, 255, 0.4);
+        }
+
+        .save-btn {
+            background: linear-gradient(135deg, #667ee0, #764ba2);
+            color: white;
+            border: none;
+            padding: 18px 35px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 800;
+            transition: all 0.3s ease;
+            box-shadow: 
+                0 12px 25px rgba(102, 126, 234, 0.4),
+                0 6px 0 rgba(102, 126, 234, 0.3),
+                inset 0 -3px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .save-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 
+                0 18px 35px rgba(102, 126, 234, 0.6),
+                0 8px 0 rgba(102, 126, 234, 0.4),
+                inset 0 -3px 0 rgba(255, 255, 255, 0.4);
+        }
+
+        .side-menu {
+            position: fixed;
+            top: 0;
+            left: -300px;
+            width: 300px;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            transition: left 0.3s ease;
+            z-index: 1000;
+            box-shadow: 5px 0 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .side-menu.active {
+            left: 0;
+        }
+
+        .menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 999;
+        }
+
+        .side-menu.active + .menu-overlay {
+            display: block;
+        }
+
+        .menu-content {
+            padding: 80px 25px 25px;
+        }
+
+        .menu-title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .menu-item {
+            display: block;
+            width: 100%;
+            padding: 15px 20px;
+            margin-bottom: 12px;
+            background: rgba(31, 158, 108, 0.1);
+            border: none;
+            border-radius: 12px;
+            color: #333;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: right;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .menu-item:hover {
+            background: rgba(31, 158, 108, 0.2);
+            transform: translateX(5px) translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .menu-item.logout {
+            background: rgba(244, 67, 54, 0.1);
+            color: #f44336;
+            margin-top: 25px;
+        }
+
+        .menu-item.logout:hover {
+            background: rgba(244, 67, 54, 0.2);
+            transform: translateX(5px) translateY(-2px);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            padding: 40px 30px;
+            border-radius: 25px;
+            text-align: center;
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.5),
+                0 15px 0 rgba(0, 0, 0, 0.3),
+                inset 0 -5px 0 rgba(255, 255, 255, 0.2),
+                0 0 50px rgba(253, 187, 45, 0.6);
+            animation: modalAppear 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            width: 90%;
+            max-width: 400px;
+        }
+
+        @keyframes modalAppear {
+            0% { 
+                transform: scale(0) rotateX(90deg) rotateY(90deg);
+                opacity: 0;
+            }
+            100% { 
+                transform: scale(1) rotateX(0) rotateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-title {
+            color: white;
+            font-size: 26px;
+            font-weight: 800;
+            margin-bottom: 25px;
+            text-shadow: 0 3px 6px rgba(0,0,0,0.5);
+            background: linear-gradient(45deg, #fff, #fdbb2d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 18px;
+            margin: 20px 0;
+            border: none;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+            text-align: center;
+            box-shadow: 
+                0 8px 20px rgba(0, 0, 0, 0.3),
+                inset 0 2px 0 rgba(255, 255, 255, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .modal-input:focus {
+            outline: none;
+            transform: scale(1.05);
+            box-shadow: 
+                0 12px 25px rgba(0, 0, 0, 0.4),
+                inset 0 2px 0 rgba(255, 255, 255, 0.6),
+                0 0 20px rgba(253, 187, 45, 0.8);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .modal-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 
+                0 8px 20px rgba(0, 0, 0, 0.3),
+                0 4px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-btn.confirm {
+            background: linear-gradient(135deg, #00b09b, #96c93d);
+            color: white;
+        }
+
+        .modal-btn.cancel {
+            background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+            color: white;
+        }
+
+        .modal-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 
+                0 12px 25px rgba(0, 0, 0, 0.4),
+                0 6px 0 rgba(0, 0, 0, 0.25);
+        }
+
+        #barcode-scanner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            z-index: 2000;
+            display: none;
+        }
+
+        #interactive {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .scanner-guide {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 250px;
+            height: 150px;
+            border: 3px solid #00ff00;
+            border-radius: 10px;
+            box-shadow: 0 0 30px #00ff00;
+            animation: scannerPulse 1.5s infinite;
+        }
+
+        @keyframes scannerPulse {
+            0% { border-color: #00ff00; box-shadow: 0 0 30px #00ff00; }
+            50% { border-color: #00cc00; box-shadow: 0 0 50px #00cc00; }
+            100% { border-color: #00ff00; box-shadow: 0 0 30px #00ff00; }
+        }
+
+        .scanner-text {
+            position: absolute;
+            top: calc(50% + 100px);
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            text-shadow: 0 0 10px black;
+        }
+
+        .scanner-controls {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+        }
+
+        .scanner-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            background: #667ee0;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .scanner-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+        }
+
+        .scan-choice-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+        }
+
+        .scan-choice-content {
+            background: white;
+            padding: 40px 30px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .scan-choice-title {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .scan-choice-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .scan-choice-btn.camera {
+            background: linear-gradient(135deg, #667ee0, #764ba2);
+            color: white;
+        }
+
+        .scan-choice-btn.simulate {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            color: white;
+        }
+
+        .scan-choice-btn.manual {
+            background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+            color: white;
+        }
+
+        .scan-choice-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 15px 10px;
+                margin: 0 5px;
+            }
+            
+            .screen-title {
+                font-size: 20px;
+            }
+            
+            .home-btn, .menu-btn {
+                padding: 10px 15px;
+                font-size: 14px;
+            }
+            
+            .permission-info {
+                padding: 20px 15px;
+                margin: 20px 10px 15px;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .items-scroll-container {
+                max-height: 300px;
+                margin: 15px 10px;
+            }
+            
+            .item-row {
+                padding: 15px;
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .item-controls {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .add-item-main {
+                width: 150px;
+                height: 150px;
+                font-size: 16px;
+                top: 65%;
+            }
+            
+            .bottom-actions {
+                bottom: 20px;
+                gap: 15px;
+            }
+            
+            .add-item-small {
+                width: 60px;
+                height: 60px;
+                font-size: 18px;
+            }
+            
+            .save-btn {
+                padding: 15px 25px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="menu-btn" onclick="toggleSideMenu()">☰ القائمة</button>
+        <h1 class="screen-title" id="screenTitle">شاشة الأذون</h1>
+        <button class="home-btn" onclick="goToHome()">🏠 الرئيسية</button>
+    </div>
+
+    <div class="permission-info">
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">اسم المستخدم</div>
+                <div class="info-value" id="userName">مستخدم</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">الوقت والتاريخ</div>
+                <div class="info-value" id="dateTime">--/--/---- --:--</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">رقم الأذن</div>
+                <div class="info-value" id="permissionNumber">--</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">نوع الأذن</div>
+                <div class="info-value" id="permissionType">--</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="items-scroll-container" id="itemsScrollContainer">
+        <div class="items-list" id="itemsList"></div>
+    </div>
+
+    <button class="add-item-main" onclick="startBarcodeScan()" id="addItemMain">
+        ➕<br>إضافة صنف
+    </button>
+
+    <div class="bottom-actions" id="bottomActions">
+        <button class="add-item-small" onclick="startBarcodeScan()">➕</button>
+        <button class="save-btn" onclick="savePermission()">💾 حفظ وإرسال</button>
+    </div>
+
+    <div class="side-menu" id="sideMenu">
+        <div class="menu-content">
+            <h3 class="menu-title">القائمة الرئيسية</h3>
+            <button class="menu-item" onclick="goToScreen('استعلام')">🔍 استعلام</button>
+            <button class="menu-item" onclick="goToPermissionScreen('استلامات')">📥 استلامات</button>
+            <button class="menu-item" onclick="goToPermissionScreen('نقل_من_المخزن_للفرع')">🚚 نقل من المخزن للفرع</button>
+            <button class="menu-item" onclick="goToPermissionScreen('نقل_من_الفرع_للمخزن')">📦 نقل من الفرع للمخزن</button>
+            <button class="menu-item" onclick="goToScreen('اذن البيع')">💰 إذن البيع</button>
+            <button class="menu-item logout" onclick="logout()">🚪 تسجيل الخروج</button>
+        </div>
+    </div>
+    <div class="menu-overlay" onclick="toggleSideMenu()"></div>
+
+    <div class="modal-overlay" id="newItemModal">
+        <div class="modal-content">
+            <h2 class="modal-title">🎯 الصنف غير موجود</h2>
+            <input type="text" class="modal-input" id="newItemName" placeholder="أدخل اسم الصنف الجديد">
+            <input type="hidden" id="scannedBarcode">
+            <div class="modal-actions">
+                <button class="modal-btn confirm" onclick="addNewItem()">✅ تم</button>
+                <button class="modal-btn cancel" onclick="closeModal()">❌ إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="barcode-scanner">
+        <div id="interactive" class="viewport">
+            <div class="scanner-guide"></div>
+            <div class="scanner-text">🎯 وجه الباركود نحو المربع الأخضر</div>
+        </div>
+        <div class="scanner-controls">
+            <button class="scanner-btn" onclick="stopBarcodeScan()">❌ إغلاق الماسح</button>
+            <button class="scanner-btn" onclick="simulateBarcodeScan()">🔄 محاكاة المسح</button>
+        </div>
+    </div>
+
+    <div class="scan-choice-modal" id="scanChoiceModal">
+        <div class="scan-choice-content">
+            <h3 class="scan-choice-title">🔍 طريقة المسح الضوئي</h3>
+            <p style="margin-bottom: 25px; color: #666;">اختر طريقة المسح المناسبة:</p>
+            <button class="scan-choice-btn camera" onclick="startCameraScanner()">📷 استخدام كاميرا الويب</button>
+            <button class="scan-choice-btn simulate" onclick="simulateBarcodeScan()">🧪 محاكاة المسح (للاختبار)</button>
+            <button class="scan-choice-btn manual" onclick="manualBarcodeEntry()">⌨️ إدخال يدوي للباركود</button>
+        </div>
+    </div>
+
+    <script>
+        // المتغيرات العامة
+        let currentPermissionType = '';
+        let currentPermissionTitle = '';
+        let items = [];
+        let isScanning = false;
+
+        // 🔄 دالة جديدة: قراءة معاملات URL
+        function getUrlParameters() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const type = urlParams.get('type');
+            return type;
+        }
+
+        // 🔄 دالة جديدة: تحويل نوع الأذن إلى عنوان عربي
+        function getPermissionTitle(permissionType) {
+            const titles = {
+                'استلامات': 'شاشة الاستلامات',
+                'نقل_من_المخزن_للفرع': 'نقل من المخزن للفرع',
+                'نقل_من_الفرع_للمخزن': 'نقل من الفرع للمخزن'
+            };
+            return titles[permissionType] || 'شاشة الأذون';
+        }
+
+        // 🔄 دالة جديدة: تحويل نوع الأذن إلى اسم عربي للعرض
+        function getPermissionDisplayName(permissionType) {
+            const displayNames = {
+                'استلامات': 'استلامات',
+                'نقل_من_المخزن_للفرع': 'نقل من المخزن للفرع',
+                'نقل_من_الفرع_للمخزن': 'نقل من الفرع للمخزن'
+            };
+            return displayNames[permissionType] || '--';
+        }
+
+        // 🔄 دالة جديدة: الانتقال لشاشة الأذون بنوع محدد
+        function goToPermissionScreen(permissionType) {
+            window.location.href = `اذون.html?type=${permissionType}`;
+        }
+
+        // تهيئة الشاشة - 🔄 معدلة لقراءة المعاملات من URL
+        function initPermissionScreen() {
+            // قراءة نوع الأذن من URL
+            const urlPermissionType = getUrlParameters();
+            
+            if (urlPermissionType) {
+                currentPermissionType = urlPermissionType;
+                currentPermissionTitle = getPermissionTitle(urlPermissionType);
+            } else {
+                // القيم الافتراضية إذا لم يتم تمرير معامل
+                currentPermissionType = 'استلامات';
+                currentPermissionTitle = 'شاشة الاستلامات';
+            }
+            
+            // تحديث واجهة المستخدم
+            document.getElementById('screenTitle').textContent = currentPermissionTitle;
+            document.getElementById('permissionType').textContent = getPermissionDisplayName(currentPermissionType);
+            document.getElementById('userName').textContent = getCurrentUserName();
+            document.getElementById('dateTime').textContent = getCurrentDateTime();
+            document.getElementById('permissionNumber').textContent = generatePermissionNumber(currentPermissionType);
+            
+            loadCachedProducts();
+        }
+
+        function getCurrentUserName() {
+            const user = localStorage.getItem('current_user');
+            return user ? JSON.parse(user).username : 'مستخدم';
+        }
+
+        function getCurrentDateTime() {
+            return new Date().toLocaleString('ar-EG');
+        }
+
+        function generatePermissionNumber(type) {
+            const prefix = getPermissionPrefix(type);
+            const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+            return `${prefix}-${randomNum}`;
+        }
+
+        function getPermissionPrefix(type) {
+            const prefixes = {
+                'استلامات': 'R',
+                'نقل_من_المخزن_للفرع': 'T',
+                'نقل_من_الفرع_للمخزن': 'B'
+            };
+            return prefixes[type] || 'X';
+        }
+
+        // إدارة القائمة الجانبية
+        function toggleSideMenu() {
+            const sideMenu = document.getElementById('sideMenu');
+            sideMenu.classList.toggle('active');
+        }
+
+        // نظام المسح الضوئي المتكامل
+        function startBarcodeScan() {
+            const isComputer = !/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+            
+            if (isComputer) {
+                showScanChoiceModal();
+            } else {
+                startCameraScanner();
+            }
+        }
+
+        function showScanChoiceModal() {
+            document.getElementById('scanChoiceModal').style.display = 'flex';
+        }
+
+        function startCameraScanner() {
+            document.getElementById('scanChoiceModal').style.display = 'none';
+            
+            const scanner = document.getElementById('barcode-scanner');
+            scanner.style.display = 'block';
+            isScanning = true;
+            
+            const isComputer = !/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+            
+            Quagga.init({
+                inputStream: {
+                    name: "Live",
+                    type: "LiveStream",
+                    target: document.querySelector('#interactive'),
+                    constraints: {
+                        width: isComputer ? 1280 : 640,
+                        height: isComputer ? 720 : 480,
+                        facingMode: "environment",
+                        aspectRatio: { min: 1, max: 2 }
+                    }
+                },
+                locator: {
+                    patchSize: isComputer ? "large" : "medium",
+                    halfSample: true
+                },
+                numOfWorkers: isComputer ? 4 : 2,
+                decoder: {
+                    readers: ["code_128_reader", "ean_reader", "ean_8_reader", "code_39_reader"]
+                },
+                locate: true
+            }, function(err) {
+                if (err) {
+                    console.error('❌ خطأ الماسح:', err);
+                    alert('❌ تعذر تشغيل الكاميرا. جرب المحاكاة أو الإدخال اليدوي.');
+                    stopBarcodeScan();
+                    simulateBarcodeScan();
+                    return;
+                }
+                Quagga.start();
+            });
+
+            Quagga.onDetected(function(result) {
+                if (isScanning) {
+                    const barcode = result.codeResult.code;
+                    console.log('✅ تم كشف الباركود:', barcode);
+                    stopBarcodeScan();
+                    processScannedBarcode(barcode);
+                }
+            });
+        }
+
+        function stopBarcodeScan() {
+            isScanning = false;
+            Quagga.stop();
+            document.getElementById('barcode-scanner').style.display = 'none';
+        }
+
+        function manualBarcodeEntry() {
+            document.getElementById('scanChoiceModal').style.display = 'none';
+            const barcode = prompt('⌨️ أدخل رقم الباركود يدوياً:');
+            if (barcode && barcode.trim()) {
+                processScannedBarcode(barcode.trim());
+            }
+        }
+
+        function simulateBarcodeScan() {
+            document.getElementById('scanChoiceModal').style.display = 'none';
+            const barcodes = ['123456', '789012', '345678', '999999'];
+            const randomBarcode = barcodes[Math.floor(Math.random() * barcodes.length)];
+            processScannedBarcode(randomBarcode);
+        }
+
+        function processScannedBarcode(barcode) {
+            const products = JSON.parse(localStorage.getItem('cached_products') || '[]');
+            const foundProduct = products.find(p => p.barcode === barcode);
+            
+            if (foundProduct) {
+                addItemToList(foundProduct);
+            } else {
+                showNewItemModal(barcode);
+            }
+        }
+
+        // إدارة الأصناف
+        function addItemToList(product) {
+            const item = {
+                id: Date.now(),
+                barcode: product.barcode,
+                name: product.name,
+                quantity: '1'
+            };
+            
+            items.push(item);
+            updateItemsList();
+            
+            document.getElementById('addItemMain').style.display = 'none';
+            document.getElementById('bottomActions').style.display = 'flex';
+            document.getElementById('itemsScrollContainer').style.display = 'block';
+            
+            showMessage(`✅ تم إضافة ${product.name} إلى القائمة`);
+        }
+
+        function updateItemsList() {
+            const itemsList = document.getElementById('itemsList');
+            itemsList.innerHTML = '';
+            
+            items.forEach(item => {
+                const itemRow = document.createElement('div');
+                itemRow.className = 'item-row';
+                itemRow.innerHTML = `
+                    <div class="item-info">
+                        <div class="item-name">${item.name}</div>
+                        <div class="item-barcode">${item.barcode}</div>
+                    </div>
+                    <div class="item-controls">
+                        <input type="number" class="quantity-input" value="${item.quantity}" 
+                               min="1" onchange="updateItemQuantity(${item.id}, this.value)">
+                        <button class="delete-btn" onclick="removeItem(${item.id})">🗑️</button>
+                    </div>
+                `;
+                itemsList.appendChild(itemRow);
+            });
+        }
+
+        function updateItemQuantity(itemId, quantity) {
+            const item = items.find(i => i.id === itemId);
+            if (item) {
+                item.quantity = quantity;
+            }
+        }
+
+        function removeItem(itemId) {
+            items = items.filter(i => i.id !== itemId);
+            updateItemsList();
+            
+            if (items.length === 0) {
+                document.getElementById('addItemMain').style.display = 'flex';
+                document.getElementById('bottomActions').style.display = 'none';
+                document.getElementById('itemsScrollContainer').style.display = 'none';
+            }
+        }
+
+        // الشاشة المصغرة
+        function showNewItemModal(barcode) {
+            document.getElementById('scannedBarcode').value = barcode;
+            document.getElementById('newItemModal').style.display = 'flex';
+            document.getElementById('newItemName').focus();
+        }
+
+        function closeModal() {
+            document.getElementById('newItemModal').style.display = 'none';
+            document.getElementById('newItemName').value = '';
+        }
+
+        function addNewItem() {
+            const itemName = document.getElementById('newItemName').value.trim();
+            const barcode = document.getElementById('scannedBarcode').value;
+            
+            if (!itemName) {
+                showMessage('⚠️ يرجى إدخال اسم الصنف');
+                return;
+            }
+            
+            const newProduct = {
+                barcode: barcode,
+                name: itemName,
+                price: '0'
+            };
+            
+            saveNewProduct(newProduct);
+            addItemToList(newProduct);
+            closeModal();
+        }
+
+        function saveNewProduct(product) {
+            const products = JSON.parse(localStorage.getItem('cached_products') || '[]');
+            products.push(product);
+            localStorage.setItem('cached_products', JSON.stringify(products));
+        }
+
+        function loadCachedProducts() {
+            const cached = localStorage.getItem('cached_products');
+            if (!cached) {
+                const sampleProducts = [
+                    { barcode: '123456', name: 'صنف تجريبي 1', price: '10' },
+                    { barcode: '789012', name: 'صنف تجريبي 2', price: '15' },
+                    { barcode: '345678', name: 'صنف تجريبي 3', price: '20' }
+                ];
+                localStorage.setItem('cached_products', JSON.stringify(sampleProducts));
+            }
+        }
+
+        // ✅ نظام الحفظ والإرسال - الإصدار الأصلي الذي كان يعمل
+        async function savePermission() {
+            if (items.length === 0) {
+                showMessage('⚠️ يرجى إضافة أصناف أولاً');
+                return;
+            }
+            
+            const permissionData = {
+                number: document.getElementById('permissionNumber').textContent,
+                type: currentPermissionType,
+                title: currentPermissionTitle,
+                user: getCurrentUserName(),
+                dateTime: getCurrentDateTime(),
+                items: items,
+                status: 'pending',
+                syncTime: null,
+                syncAttempts: 0
+            };
+            
+            // ✅ الخطوة 1: الحفظ المحلي فوراً
+            const localSaveResult = savePermissionLocal(permissionData);
+            
+            if (localSaveResult) {
+                showMessage('✅ تم حفظ الأذن محلياً');
+                
+                // ✅ الخطوة 2: محاولة الإرسال لـ Google Sheets إذا كان هناك اتصال
+                if (navigator.onLine) {
+                    showMessage('🌐 جاري إرسال الأذن إلى السيرفر...');
+                    const serverSaveResult = await sendToGoogleSheets(permissionData);
+                    
+                    if (serverSaveResult) {
+                        showMessage('✅ تم حفظ وإرسال الأذن بنجاح!');
+                        updateLocalPermissionStatus(permissionData.number, 'sent');
+                    } else {
+                        showMessage('⚠️ تم الحفظ محلياً ولكن فشل الإرسال - سيتم إعادة المحاولة لاحقاً');
+                        updateLocalPermissionStatus(permissionData.number, 'failed');
+                    }
+                } else {
+                    showMessage('📴 تم الحفظ محلياً - سيتم الإرسال عند الاتصال بالإنترنت');
+                }
+            } else {
+                showMessage('❌ فشل حفظ الأذن محلياً');
+                return;
+            }
+            
+            // إفراغ الشاشة بعد الحفظ
+            resetScreen();
+        }
+
+        // ✅ دالة الحفظ المحلي
+        function savePermissionLocal(permissionData) {
+            try {
+                const permissions = JSON.parse(localStorage.getItem('pending_permissions') || '[]');
+                
+                const existingIndex = permissions.findIndex(p => p.number === permissionData.number);
+                if (existingIndex !== -1) {
+                    permissions[existingIndex] = permissionData;
+                } else {
+                    permissions.push(permissionData);
+                }
+                
+                localStorage.setItem('pending_permissions', JSON.stringify(permissions));
+                console.log('✅ تم الحفظ المحلي:', permissionData.number);
+                return true;
+            } catch (error) {
+                console.error('❌ خطأ في الحفظ المحلي:', error);
+                return false;
+            }
+        }
+
+        // ✅ دالة الإرسال إلى Google Sheets - الإصدار الأصلي
+        async function sendToGoogleSheets(permissionData) {
+            try {
+                console.log('🔄 محاولة إرسال الأذن إلى Google Sheets:', permissionData.number);
+
+                // ✅ استخدام خدمة Google Sheets الموجودة (تعمل بـ JSONP)
+                if (typeof googleSheets !== 'undefined' && typeof googleSheets.savePermission === 'function') {
+                    const result = await googleSheets.savePermission(permissionData);
+                    
+                    // ✅ التصحيح هنا: تحقق من result.success (من الكود الجديد) بدلاً من result.status
+                    if (result && result.success) {
+                        console.log('✅ تم إرسال الأذن بنجاح:', permissionData.number);
+                        return true;
+                    } else {
+                        console.error('❌ فشل إرسال الأذن:', result?.error);
+                        return false;
+                    }
+                } else {
+                    console.error('❌ خدمة Google Sheets غير متاحة');
+                    return false;
+                }
+            } catch (error) {
+                console.error('❌ خطأ في إرسال الأذن:', error);
+                return false;
+            }
+        }
+
+        // ✅ دالة تحديث حالة الأذن المحلي
+        function updateLocalPermissionStatus(permissionNumber, status, syncTime = null) {
+            try {
+                const permissions = JSON.parse(localStorage.getItem('pending_permissions') || '[]');
+                const permissionIndex = permissions.findIndex(p => p.number === permissionNumber);
+                
+                if (permissionIndex !== -1) {
+                    permissions[permissionIndex].status = status;
+                    if (syncTime) {
+                        permissions[permissionIndex].syncTime = syncTime;
+                    }
+                    localStorage.setItem('pending_permissions', JSON.stringify(permissions));
+                    console.log('✅ تم تحديث حالة الأذن:', permissionNumber, status);
+                }
+            } catch (error) {
+                console.error('❌ خطأ في تحديث الحالة:', error);
+            }
+        }
+
+        // ✅ دالة مزامنة الأذون المعلقة
+        async function syncPendingPermissions() {
+            if (!navigator.onLine) {
+                console.log('📴 لا يوجد اتصال - لا يمكن المزامنة');
+                return;
+            }
+            
+            try {
+                const permissions = JSON.parse(localStorage.getItem('pending_permissions') || '[]');
+                const pendingPermissions = permissions.filter(p => p.status === 'pending' || p.status === 'failed');
+                
+                if (pendingPermissions.length === 0) {
+                    console.log('✅ لا توجد أذون معلقة للمزامنة');
+                    return;
+                }
+                
+                console.log(`🔄 جاري مزامنة ${pendingPermissions.length} أذون معلقة...`);
+                
+                let successCount = 0;
+                let failCount = 0;
+                
+                for (const permission of pendingPermissions) {
+                    if (permission.syncAttempts >= 3) {
+                        console.log(`⏭️ تخطي الأذن ${permission.number} - تجاوز الحد الأقصى للمحاولات`);
+                        failCount++;
+                        continue;
+                    }
+                    
+                    const result = await sendToGoogleSheets(permission);
+                    if (result) {
+                        successCount++;
+                        updateLocalPermissionStatus(permission.number, 'sent', new Date().toISOString());
+                    } else {
+                        failCount++;
+                        permission.syncAttempts = (permission.syncAttempts || 0) + 1;
+                        updateLocalPermissionStatus(permission.number, 'failed');
+                    }
+                    
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+                
+                console.log(`✅ إنتهت المزامنة: ${successCount} ناجح, ${failCount} فاشل`);
+                
+                if (successCount > 0) {
+                    showMessage(`✅ تم مزامنة ${successCount} أذن بنجاح`);
+                }
+                
+            } catch (error) {
+                console.error('❌ خطأ في مزامنة الأذون المعلقة:', error);
+            }
+        }
+
+        // ✅ الاستماع لتغيرات حالة الاتصال
+        window.addEventListener('online', function() {
+            console.log('🌐 تم استعادة الاتصال - جاري مزامنة الأذون المعلقة...');
+            syncPendingPermissions();
+        });
+
+        // ✅ مزامنة تلقائية كل دقيقة عند الاتصال
+        setInterval(() => {
+            if (navigator.onLine) {
+                syncPendingPermissions();
+            }
+        }, 60000);
+
+        // دالة جديدة: إفراغ الشاشة
+        function resetScreen() {
+            items = [];
+            updateItemsList();
+            
+            document.getElementById('addItemMain').style.display = 'flex';
+            document.getElementById('bottomActions').style.display = 'none';
+            document.getElementById('itemsScrollContainer').style.display = 'none';
+            
+            document.getElementById('permissionNumber').textContent = generatePermissionNumber(currentPermissionType);
+            document.getElementById('dateTime').textContent = getCurrentDateTime();
+            
+            showMessage('🔄 تم إفراغ الشاشة وجاهزة لأذن جديد');
+        }
+
+        // دوال مساعدة
+        function showMessage(message) {
+            alert(message);
+        }
+
+        function goToHome() {
+            window.location.href = 'home.html';
+        }
+
+        function goToScreen(screenName) {
+            showMessage(`🚀 الانتقال إلى: ${screenName}`);
+            toggleSideMenu();
+        }
+
+        function logout() {
+            if (confirm('هل تريد تسجيل الخروج؟')) {
+                localStorage.removeItem('current_user');
+                window.location.href = 'index.html';
+            }
+        }
+
+        // التهيئة - 🔄 معدلة لاستدعاء الدالة الجديدة
+        document.addEventListener('DOMContentLoaded', function() {
+            initPermissionScreen();
+            // بدء المزامنة التلقائية بعد تحميل الصفحة
+            setTimeout(syncPendingPermissions, 5000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة السوبر ماركت</title>
+    <style>
+        /* التنسيقات الأساسية */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            direction: rtl;
+        }
+
+        /* حاوية تسجيل الدخول */
+        .login-container {
+            background: white;
+            padding: 50px 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+        }
+
+        /* رأس الشاشة */
+        .login-header {
+            margin-bottom: 40px;
+        }
+
+        .login-header h1 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .login-header p {
+            color: #666;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        /* مجموعة الإدخال */
+        .input-group {
+            margin-bottom: 25px;
+            text-align: right;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 10px;
+            color: #333;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 18px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .input-group input:focus {
+            border-color: #667eea;
+            background: white;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* زر الدخول */
+        .login-btn {
+            width: 100%;
+            padding: 18px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .login-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .login-btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* تحسينات للهاتف */
+        @media (max-width: 480px) {
+            body {
+                padding: 15px;
+            }
+            
+            .login-container {
+                padding: 40px 25px;
+            }
+            
+            .login-header h1 {
+                font-size: 28px;
+            }
+            
+            .input-group input {
+                padding: 16px 18px;
+            }
+            
+            .login-btn {
+                padding: 16px;
+                font-size: 17px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>تسجيل الدخول</h1>
+            <p>مرحباً بك في نظام إدارة السوبر ماركت</p>
+        </div>
+        
+        <form class="login-form">
+            <div class="input-group">
+                <label for="username">اسم المستخدم</label>
+                <input type="text" id="username" placeholder="أدخل اسم المستخدم" required>
+            </div>
+            
+            <div class="input-group">
+                <label for="password">كلمة المرور</label>
+                <input type="password" id="password" placeholder="أدخل كلمة المرور" required>
+            </div>
+            
+            <button type="submit" class="login-btn" id="loginBtn">🚀 دخول إلى النظام</button>
+        </form>
+    </div>
+
+    <script>
+        // نظام إدارة التطبيق
+        class AppManager {
+            constructor() {
+                this.scriptUrl = 'https://script.google.com/macros/s/AKfycbyeZy4h732imiVLF90gik1p9kkr5nBj55RxqZb81K6j9vXhZQyR3hGL9ngaZMaAFRL1/exec';
+                this.currentUser = null;
+                this.init();
+            }
+
+            init() {
+                console.log('🚀 بدء تشغيل التطبيق...');
+                
+                // التحقق من المستخدم المسجل مسبقاً
+                if (this.checkExistingLogin()) {
+                    return;
+                }
+                
+                this.setupLoginListener();
+                this.loadUsersData();
+            }
+
+            // التحقق من وجود مستخدم مسجل مسبقاً
+            // التحقق من وجود مستخدم مسجل مسبقاً
+checkExistingLogin() {
+    const savedUser = localStorage.getItem('current_user');
+    if (savedUser) {
+        try {
+            this.currentUser = JSON.parse(savedUser);
+            
+            if (this.currentUser && this.currentUser.username && this.currentUser.isLoggedIn) {
+                console.log('👤 مستخدم مسجل مسبقاً:', this.currentUser.username);
+                
+                // ✅ إضافة تأكيد للمستخدم قبل التوجيه التلقائي
+                const shouldAutoLogin = confirm(`مرحباً ${this.currentUser.username}!\nهل تريد الاستمرار بالدخول التلقائي؟`);
+                
+                if (shouldAutoLogin) {
+                    this.hideLoginScreen();
+                    this.goToMainScreen();
+                    return true;
+                } else {
+                    // إذا قال لا، نمسح البيانات ونعرض شاشة التسجيل
+                    this.logout();
+                    return false;
+                }
+            }
+        } catch (error) {
+            console.error('❌ بيانات جلسة تالفة:', error);
+            localStorage.removeItem('current_user');
+        }
+    }
+    return false;
+}
+
+// إضافة دالة تسجيل الخروج
+logout() {
+    this.currentUser = null;
+    localStorage.removeItem('current_user');
+    console.log('✅ تم مسح بيانات الجلسة');
+}
+
+            // إخفاء شاشة تسجيل الدخول
+            hideLoginScreen() {
+                const loginContainer = document.querySelector('.login-container');
+                if (loginContainer) {
+                    loginContainer.style.display = 'none';
+                }
+            }
+
+            // جلب بيانات المستخدمين من السيرفر
+            async loadUsersData() {
+                try {
+                    console.log('🔍 جاري جلب بيانات المستخدمين...');
+                    const users = await this.makeRequest('getUsers');
+                    
+                    if (users && users.length > 0) {
+                        localStorage.setItem('cached_users', JSON.stringify(users));
+                        console.log('✅ تم تحميل بيانات المستخدمين:', users.length, 'مستخدم');
+                        
+                        // عرض بيانات الدخول المتاحة
+                        console.log('👥 المستخدمون المتاحون:');
+                        users.forEach(user => {
+                            console.log(`   📝 "${user.username}" / كلمة المرور: "${user.password}"`);
+                        });
+                    } else {
+                        console.log('⚠️ لا توجد بيانات مستخدمين');
+                    }
+                } catch (error) {
+                    console.error('❌ خطأ في جلب البيانات:', error);
+                }
+            }
+
+            // إعداد مستمع حدث تسجيل الدخول
+            setupLoginListener() {
+                const loginForm = document.querySelector('.login-form');
+                if (loginForm) {
+                    loginForm.addEventListener('submit', (e) => this.handleLogin(e));
+                }
+            }
+
+            // معالجة تسجيل الدخول
+            async handleLogin(event) {
+                event.preventDefault();
+                
+                const username = document.getElementById('username').value.trim();
+                const password = document.getElementById('password').value.trim();
+                const loginBtn = document.getElementById('loginBtn');
+                
+                if (!username || !password) {
+                    this.showMessage('⚠️ يرجى إدخال اسم المستخدم وكلمة المرور');
+                    return;
+                }
+
+                loginBtn.disabled = true;
+                loginBtn.textContent = '⏳ جاري التحقق...';
+
+                try {
+                    // التحقق من البيانات ضد البيانات المخزنة محلياً
+                    const isValid = this.validateLogin(username, password);
+                    
+                    if (isValid) {
+                        this.saveUserSession(username);
+                        this.showMessage('✅ تم تسجيل الدخول بنجاح - ' + username);
+                        this.hideLoginScreen();
+                        this.goToMainScreen();
+                    } else {
+                        this.showMessage('❌ بيانات الدخول غير صحيحة');
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ خطأ:', error);
+                    this.showMessage('❌ حدث خطأ في النظام');
+                } finally {
+                    loginBtn.disabled = false;
+                    loginBtn.textContent = '🚀 دخول إلى النظام';
+                }
+            }
+
+            // التحقق من صحة بيانات المستخدم
+            validateLogin(username, password) {
+                const usersData = localStorage.getItem('cached_users');
+                
+                if (!usersData) {
+                    console.log('❌ لا توجد بيانات مستخدمين مخزنة');
+                    return false;
+                }
+
+                const users = JSON.parse(usersData);
+                const user = users.find(u => u.username === username && u.password === password);
+                
+                return !!user;
+            }
+
+            // حفظ جلسة المستخدم
+            saveUserSession(username) {
+                this.currentUser = {
+                    username: username,
+                    isLoggedIn: true,
+                    loginTime: new Date().toLocaleString('ar-EG')
+                };
+                localStorage.setItem('current_user', JSON.stringify(this.currentUser));
+                console.log('💾 تم حفظ جلسة المستخدم:', username);
+            }
+
+            // الانتقال للشاشة الرئيسية
+            // الانتقال للشاشة الرئيسية
+goToMainScreen() {
+    console.log('🔄 الانتقال للشاشة الرئيسية...');
+    
+    // التوجيه إلى home.html بدلاً من إعادة بناء الصفحة
+    window.location.href = 'home.html';
+}
+
+            // طلب إلى السيرفر
+            async makeRequest(action, data = null) {
+                return new Promise((resolve, reject) => {
+                    const callbackName = 'callback_' + Date.now();
+                    let url = `${this.scriptUrl}?action=${action}&callback=${callbackName}`;
+                    
+                    if (data) {
+                        url += `&data=${encodeURIComponent(JSON.stringify(data))}`;
+                    }
+
+                    const script = document.createElement('script');
+                    script.src = url;
+                    
+                    window[callbackName] = (response) => {
+                        delete window[callbackName];
+                        document.body.removeChild(script);
+                        
+                        if (response && response.status === 'success') {
+                            resolve(response.data);
+                        } else {
+                            reject(new Error(response?.data || 'خطأ في الخادم'));
+                        }
+                    };
+
+                    script.onerror = () => {
+                        delete window[callbackName];
+                        document.body.removeChild(script);
+                        reject(new Error('فشل الاتصال بالخادم'));
+                    };
+
+                    document.body.appendChild(script);
+
+                    setTimeout(() => {
+                        if (window[callbackName]) {
+                            delete window[callbackName];
+                            document.body.removeChild(script);
+                            reject(new Error('انتهى وقت الانتظار'));
+                        }
+                    }, 10000);
+                });
+            }
+
+            // عرض الرسائل
+            showMessage(message) {
+                alert(message);
+            }
+        }
+
+        // بدء التطبيق
+        document.addEventListener('DOMContentLoaded', function() {
+            window.app = new AppManager();
+        });
+    </script>
+</body>
+</html>
